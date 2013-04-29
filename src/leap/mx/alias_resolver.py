@@ -39,7 +39,8 @@ logger = logging.getLogger(__name__)
 
 class AliasResolverFactory(postfix.PostfixTCPMapDeferringDictServerFactory):
     def __init__(self, couchdb, *args, **kwargs):
-        postfix.PostfixTCPMapDeferringDictServerFactory.__init__(self, *args, **kwargs)
+        postfix.PostfixTCPMapDeferringDictServerFactory.__init__(
+            self, *args, **kwargs)
         self._cdb = couchdb
 
     def _to_str(self, result):

@@ -145,7 +145,6 @@ class ConnectedCouchDB(client.CouchDB):
                 return uuid
         return None
 
-
     def getPubKey(self, uuid):
         pubkey = None
         try:
@@ -164,6 +163,7 @@ if __name__ == "__main__":
                            password="")
 
     d = cdb.queryByLoginOrAlias("test1")
+
     @d.addCallback
     def right(result):
         print "Should be an actual uuid:", result
@@ -171,6 +171,7 @@ if __name__ == "__main__":
         print cdb.getPubKey(result)
 
     d2 = cdb.queryByLoginOrAlias("asdjaoisdjoiqwjeoi")
+
     @d2.addCallback
     def wrong(result):
         print "Should be None:", result

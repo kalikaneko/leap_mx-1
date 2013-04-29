@@ -35,19 +35,22 @@ except ImportError, ie:
     print "help on using virtualenv and pip to obtain requirements."
 
 
-if __name__ == "__main__":
+def main():
     epilog = "Copyright 2012 The LEAP Encryption Access Project"
     parser = argparse.ArgumentParser(description="""LEAP MX""",
                                      epilog=epilog)
-    parser.add_argument('-d', '--debug', action="store_true",
-                        help="Launches the LEAP MX mail receiver with debug output")
-    parser.add_argument('-l', '--logfile', metavar="LOG FILE", nargs='?',
-                        action="store", dest="log_file",
-                        help="Writes the logs to the specified file")
-    parser.add_argument('-c', '--config', metavar="CONFIG FILE", nargs='?',
-                        action="store", dest="config",
-                        help="Where to look for the configuration file. " \
-                            "Default: mail_receiver.cfg")
+    parser.add_argument(
+        '-d', '--debug', action="store_true",
+        help="Launches the LEAP MX mail receiver with debug output")
+    parser.add_argument(
+        '-l', '--logfile', metavar="LOG FILE", nargs='?',
+        action="store", dest="log_file",
+        help="Writes the logs to the specified file")
+    parser.add_argument(
+        '-c', '--config', metavar="CONFIG FILE", nargs='?',
+        action="store", dest="config",
+        help="Where to look for the configuration file. "
+        "Default: mail_receiver.cfg")
 
     opts, _ = parser.parse_known_args()
 
@@ -113,15 +116,17 @@ if __name__ == "__main__":
                                                     server,
                                                     port)
 
-    incoming_partial = partial(mail_receiver._process_incoming_email, cdb, mail_couch_url_prefix)
+    incoming_partial = partial(
+        mail_receiver._process_incoming_email, cdb, mail_couch_url_prefix)
+
     for section in config.sections():
         if section in ("couchdb"):
             continue
         to_watch = config.get(section, "path")
         recursive = config.getboolean(section, "recursive")
         logger.debug("Watching %s --- Recursive: %s" % (to_watch, recursive))
-        wm.watch(filepath.FilePath(to_watch), mask, callbacks=[incoming_partial], recursive=recursive)
-
+        wm.watch(filepath.FilePath(to_watch),
+                 mask, callbacks=[incoming_partial], recursive=recursive)
 
     # Alias map
     alias_endpoint = TCP4ServerEndpoint(reactor, 4242)
@@ -132,3 +137,6 @@ if __name__ == "__main__":
     check_recipient.listen(CheckRecipientAccessFactory(couchdb=cdb))
 
     reactor.run()
+
+if __name__ == "__main__":
+    main()

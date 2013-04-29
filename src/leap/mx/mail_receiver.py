@@ -44,6 +44,7 @@ def _get_pubkey(uuid, cdb):
     logger.debug("Fetching pubkey for %s" % (uuid,))
     return uuid, cdb.getPubKey(uuid)
 
+
 def _encrypt_message(uuid_pubkey, address_message):
     uuid, pubkey = uuid_pubkey
     address, message = address_message
@@ -101,15 +102,22 @@ def _conditional_remove(do_remove, filepath):
             logger.exception("%s" % (e,))
 
 
-def _process_incoming_email(users_db, mail_couchdb_url_prefix, self, filepath, mask):
-    if os.path.split(filepath.dirname())[-1]  == "new":
+def _process_incoming_email(users_db, mail_couchdb_url_prefix,
+                            self, filepath, mask):
+    logger.debug('filepath: %s' % filepath)
+    if os.path.split(filepath.dirname())[-1] == "new":
         logger.debug("Processing new mail at %s" % (filepath.path,))
         with filepath.open("r") as f:
             mail_data = f.read()
             mail = message_from_string(mail_data)
+
             owner = mail["To"]
             if owner is None:  # default to Delivered-To
                 owner = mail["Delivered-To"]
+            if not owner:
+                logger.error(
+                    "Malformed mail, neither to nor delivered-to field")
+                return
             owner = owner.split("@")[0]
             owner = owner.split("+")[0]
             logger.debug("Mail owner: %s" % (owner,))
@@ -124,16 +132,18 @@ def _process_incoming_email(users_db, mail_couchdb_url_prefix, self, filepath, m
 
 def main():
     epilog = "Copyright 2012 The LEAP Encryption Access Project"
-    parser = argparse.ArgumentParser(description="""LEAP MX Mail receiver""", epilog=epilog)
+    parser = argparse.ArgumentParser(description="""LEAP MX Mail receiver""",
+                                     epilog=epilog)
     parser.add_argument('-d', '--debug', action="store_true",
-                        help="Launches the LEAP MX mail receiver with debug output")
+                        help="Launches the LEAP MX mail receiver with "
+                        "debug output")
     parser.add_argument('-l', '--logfile', metavar="LOG FILE", nargs='?',
                         action="store", dest="log_file",
                         help="Writes the logs to the specified file")
     parser.add_argument('-c', '--config', metavar="CONFIG FILE", nargs='?',
                         action="store", dest="config",
-                        help="Where to look for the configuration file. " \
-                            "Default: mail_receiver.cfg")
+                        help="Where to look for the configuration file. "
+                        "Default: mail_receiver.cfg")
 
     opts, _ = parser.parse_known_args()
 
@@ -190,14 +200,19 @@ def main():
                                                            mail_password,
                                                            port)
 
-    incoming_partial = partial(_process_incoming_email, users_db, mail_couch_url_prefix)
+    incoming_partial = partial(
+        _process_incoming_email, users_db, mail_couch_url_prefix)
     for section in config.sections():
         if section in ("couchdb"):
             continue
         to_watch = config.get(section, "path")
         recursive = config.getboolean(section, "recursive")
         logger.debug("Watching %s --- Recursive: %s" % (to_watch, recursive))
-        wm.watch(filepath.FilePath(to_watch), mask, callbacks=[incoming_partial], recursive=recursive)
+        wm.watch(
+            filepath.FilePath(to_watch),
+            mask,
+            callbacks=[incoming_partial],
+            recursive=recursive)
 
     reactor.run()
 

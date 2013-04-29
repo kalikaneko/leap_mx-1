@@ -17,6 +17,8 @@ develop-eggs
 .installed.cfg
 lib
 lib64
+MANIFEST
+PKG-INFO
 
 # Installer logs
 pip-log.txt
@@ -40,6 +42,10 @@ nosetests.xml
 # Ignore emacs temporary files
 *~
 \#*\#
+
+# and vim's
+*.swp
+*.swo
 
 # Ignore client logfiles and configs
 *.log
